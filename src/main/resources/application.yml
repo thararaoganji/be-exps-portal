@@ -7,7 +7,7 @@ spring:
   application:
     name: expenses-portal
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/expense_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/expense_db}
     username: ${SPRING_DATASOURCE_USERNAME:expense_user}
     password: ${SPRING_DATASOURCE_PASSWORD:expense_pass}
   jpa:

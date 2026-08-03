@@ -12,9 +12,7 @@ import portal.expenses.repository.ExpenseRepository;
 import portal.expenses.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,10 +37,6 @@ public class ExpenseService {
 
     @Value("${storage.mode}")
     private String storageMode;
-
-    @Autowired
-    @Lazy
-    private ExpenseService self;
 
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
@@ -140,7 +134,7 @@ public class ExpenseService {
     @Transactional
     public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
                                  String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
-        return self.createExpense(description, amount, receipt, username, category, expenseDate, false);
+        return this.createExpense(description, amount, receipt, username, category, expenseDate, false);
     }
 
     public List<Expense> getExpensesForUser(Long userId) {
