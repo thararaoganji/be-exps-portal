@@ -78,13 +78,13 @@ sonar {
 		def branch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 
 		// This makes "my-project" and "my-project:feature-x" separate dashboard entries
-		property "sonar.projectKey", "expenses-portal:${branch}"
-		property "sonar.projectName", "Expenses Portal (${branch})"
+		//property "sonar.projectKey", "expenses-portal:${branch}"
+		//property "sonar.projectName", "Expenses Portal (${branch})"
 
-		property "sonar.host.url", "http://localhost:9001"
-		//property "sonar.projectKey", "expenses-portal"
-		//property "sonar.projectName", "Expenses Portal"
-		property "sonar.token", "squ_c15ef79b8174e38a47c3f1f9f70fedcbeba8649f"
+		property "sonar.host.url", "http://localhost:9000"
+		property "sonar.projectKey", "be-exps-portal"
+		property "sonar.projectName", "BE Expenses Portal"
+		property "sonar.token", "squ_5c2734eea182b2cc7ec904636b234947f6a8247d"
 	}
 }
 
