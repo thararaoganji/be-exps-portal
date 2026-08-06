@@ -77,11 +77,11 @@ sonar {
 
 		def branch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 
-		property "sonar.host.url", "http://localhost:9000"
+//		property "sonar.host.url", "http://localhost:9001"
 		property "sonar.projectKey", "be-exps-portal"
 		property "sonar.projectName", "BE Expenses Portal"
 		property "sonar.branch.name", branch
-		property "sonar.token", "squ_49a025b5b84126913a1d43948b39b927f827fd93"
+//		property "sonar.token", "squ_21e46fdb692b28cf01d89b027893fdb8d206b580"
 	}
 }
 

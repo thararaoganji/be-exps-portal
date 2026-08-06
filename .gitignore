@@ -43,3 +43,6 @@ Thumbs.db
 ### Gradle Wrapper ###
 # We usually keep the wrapper, but ignore user-specific settings
 .gradle-home/
+
+# Force Git to track the wrapper jar despite the global *.jar rule
+!gradle/wrapper/gradle-wrapper.jar
