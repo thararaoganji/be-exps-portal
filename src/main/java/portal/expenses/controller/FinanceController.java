@@ -33,8 +33,7 @@ public class FinanceController {
      */
     @GetMapping("/reimbursement-queue")
     public ResponseEntity<List<Expense>> getReimbursementQueue() {
-        List<Expense> expenses = expenseService.getExpensesByStatus(ApprovalStatus.APPROVED);
-        return ResponseEntity.ok(expenses);
+        return ResponseEntity.ok(expenseService.getExpensesByStatus(ApprovalStatus.APPROVED));
     }
 
     /**
@@ -57,8 +56,7 @@ public class FinanceController {
      */
     @GetMapping("/reimbursed")
     public ResponseEntity<List<Expense>> getReimbursedExpenses() {
-        List<Expense> expenses = expenseService.getExpensesByStatus(ApprovalStatus.REIMBURSED);
-        return ResponseEntity.ok(expenses);
+        return ResponseEntity.ok(expenseService.getExpensesByStatus(ApprovalStatus.REIMBURSED));
     }
 
     /**
@@ -105,7 +103,6 @@ public class FinanceController {
      */
     @GetMapping("/approved")
     public ResponseEntity<List<Expense>> getApprovedExpenses() {
-        List<Expense> expenses = expenseService.getExpensesByStatus(ApprovalStatus.APPROVED);
-        return ResponseEntity.ok(expenses);
+        return getReimbursementQueue();
     }
 }
