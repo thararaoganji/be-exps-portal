@@ -6,6 +6,7 @@ import portal.expenses.config.CustomAuthenticationEntryPoint;
 import portal.expenses.config.JwtAuthFilter;
 import portal.expenses.config.WebSecurityConfig;
 import portal.expenses.dto.LoginRequest;
+import portal.expenses.dto.LoginResponse;
 import portal.expenses.entity.AppUser;
 import portal.expenses.repository.UserRepository;
 import portal.expenses.service.UserDetailsServiceImpl;
@@ -14,18 +15,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import portal.expenses.util.JwtUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,6 +52,9 @@ class AuthControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AuthController authController;
 
     @MockBean
     private AuthenticationManager authenticationManager;
@@ -139,7 +152,54 @@ class AuthControllerTest {
 
      */
 
+    @Test
+    void login_shouldThrowRuntimeException_whenUserNotFoundInRepository() {
+        LoginRequest loginRequest = new LoginRequest("unknown", "password");
+        UserDetails userDetails = new User("unknown", "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("mock-jwt-token");
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 
+        assertThrows(RuntimeException.class, () -> authController.login(loginRequest));
+    }
 
+    @Test
+    void validateToken_shouldReturnOkAndInvalid_whenTokenValidationFails() {
+        UserDetails userDetails = new User("user", "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+
+        when(jwtUtil.extractUsername("invalid-token")).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
+        when(jwtUtil.validateToken("invalid-token", userDetails)).thenReturn(false);
+
+        ResponseEntity<Map<String, Object>> response = authController.validateToken("Bearer invalid-token");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("user", response.getBody().get("username"));
+    }
+
+    @Test
+    void validateToken_shouldReturnBadRequest_whenHeaderIsNull() {
+        ResponseEntity<Map<String, Object>> response = authController.validateToken(null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Missing or invalid Authorization header", response.getBody().get("error"));
+    }
+
+    @Test
+    void validateToken_shouldReturnBadRequest_whenExceptionOccurs() {
+        when(jwtUtil.extractUsername("broken-token")).thenThrow(new RuntimeException("Token parse failed"));
+
+        ResponseEntity<Map<String, Object>> response = authController.validateToken("Bearer broken-token");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Token parse failed", response.getBody().get("error"));
+    }
 }
