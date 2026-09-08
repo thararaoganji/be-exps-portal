@@ -283,3 +283,60 @@ java.lang.RuntimeException: User not found: unknown-user
 2026-09-08T11:35:10.415+05:30  INFO 43794 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
 2026-09-08T11:35:10.415+05:30  INFO 43794 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
 2026-09-08T11:35:10.416+05:30  INFO 43794 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-08T11:36:11.941+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Starting AuthControllerTest using Java 21.0.2 with PID 44041 (started by tganji in /private/tmp/sonar_remediation_coverage/be-exps-portal)
+2026-09-08T11:36:11.942+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : No active profile set, falling back to 1 default profile: "default"
+2026-09-08T11:36:12.520+05:30  INFO 44041 --- [expenses-portal] [Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-08T11:36:12.521+05:30  INFO 44041 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-08T11:36:12.521+05:30  INFO 44041 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2026-09-08T11:36:12.564+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Started AuthControllerTest in 0.754 seconds (process running for 1.987)
+2026-09-08T11:36:12.596+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-08T11:36:12.616+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-08T11:36:12.617+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : User logged in successfully: user with roles: []
+2026-09-08T11:36:12.622+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (27ms)
+2026-09-08T11:36:12.637+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-08T11:36:12.641+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Validating token: valid-token...
+2026-09-08T11:36:12.641+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Extracted username from token: user
+2026-09-08T11:36:12.641+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token is VALID for user: user with roles: []
+2026-09-08T11:36:12.644+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (7ms)
+2026-09-08T11:36:12.647+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-08T11:36:12.647+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-08T11:36:12.648+05:30  WARN 44041 --- [expenses-portal] [Test worker] p.e.exception.GlobalExceptionHandler     : Authentication failed: Invalid credentials
+2026-09-08T11:36:12.651+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 401 (4ms)
+2026-09-08T11:36:12.653+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-08T11:36:12.654+05:30  WARN 44041 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token validation failed: Missing or invalid header
+2026-09-08T11:36:12.654+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 400 (1ms)
+2026-09-08T11:36:12.754+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Marking expense as reimbursed: expenseId=1, user=financeUser
+2026-09-08T11:36:12.786+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Creating expense for user: testuser, amount: 100.00, category: null, draft: false
+2026-09-08T11:36:12.787+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Expense created: ID=1, status=SUBMITTED
+2026-09-08T11:36:12.817+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Fetching expenses with filters for user: testuser - page: 0, size: 10, sort: createdAt DESC
+2026-09-08T11:36:12.817+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Retrieved 0 expenses (page 1/1) for user: testuser
+2026-09-08T11:36:12.841+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Exporting expenses to CSV: user=testuser, dateRange=[2023-01-01 to 2023-01-31]
+2026-09-08T11:36:12.842+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : CSV export completed: 1 expenses, 153 bytes
+2026-09-08T11:36:12.843+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Updating expense: ID=1, user=testuser
+2026-09-08T11:36:12.844+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : update expense completed
+2026-09-08T11:36:12.844+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Expense updated: ID=1, status=DRAFT
+2026-09-08T11:36:12.856+05:30  WARN 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Missing approval status in request: expenseId=1
+2026-09-08T11:36:12.862+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Processing approval: expenseId=1, user=approverUser, status=APPROVED
+2026-09-08T11:36:12.862+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Approval completed: expenseId=1, finalStatus=APPROVED
+2026-09-08T11:36:12.865+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Submitting expense: ID=1, user=testuser
+2026-09-08T11:36:12.865+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.controller.ExpenseController  : Expense submitted: ID=1, status=SUBMITTED
+2026-09-08T11:36:13.003+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=APPROVED
+2026-09-08T11:36:13.006+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=finance.jane, status=APPROVED
+2026-09-08T11:36:13.007+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=REJECTED
+2026-09-08T11:36:13.008+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=finance.jane, status=REJECTED
+2026-09-08T11:36:13.013+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=FINANCE_REVIEW
+2026-09-08T11:36:13.014+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=APPROVED
+2026-09-08T11:36:13.015+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=MANAGER_REVIEW
+2026-09-08T11:36:13.016+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=FINANCE_REVIEW
+2026-09-08T11:36:13.031+05:30  INFO 44041 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-08T11:36:13.036+05:30  INFO 44041 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-08T11:36:13.037+05:30  INFO 44041 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense reimbursed: ID=1
+2026-09-08T11:36:13.042+05:30  INFO 44041 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense submitted: ID=1, status=MANAGER_REVIEW, user=test.user
+2026-09-08T11:36:13.064+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-08T11:36:13.065+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-08T11:36:13.066+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-08T11:36:13.066+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=AUTO_APPROVED
+2026-09-08T11:36:13.067+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-08T11:36:13.068+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-08T11:36:13.068+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-08T11:36:13.069+05:30  INFO 44041 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
