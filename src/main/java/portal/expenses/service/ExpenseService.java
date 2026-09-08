@@ -12,11 +12,14 @@ import portal.expenses.repository.ExpenseRepository;
 import portal.expenses.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +47,10 @@ public class ExpenseService {
     private final LocalStorageService localStorageService;
     private final PolicyEngineService policyEngineService;
     private final AuditEntryRepository auditEntryRepository;
+
+    @Autowired
+    @Lazy
+    private ExpenseService self;
 
     public ExpenseService(ExpenseRepository expenseRepository, UserRepository userRepository,
                          S3Service s3Service, LocalStorageService localStorageService,
@@ -134,7 +141,7 @@ public class ExpenseService {
     @Transactional
     public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
                                  String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
-        return this.createExpense(description, amount, receipt, username, category, expenseDate, false);
+        return (self != null ? self : this).createExpense(description, amount, receipt, username, category, expenseDate, false);
     }
 
     public List<Expense> getExpensesForUser(Long userId) {
@@ -162,7 +169,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to submit this expense");
+            throw new AccessDeniedException("User is not authorized to submit this expense");
         }
 
         // Validate that expense is in DRAFT status (or PENDING for backward compatibility)
@@ -208,7 +215,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to update this expense");
+            throw new AccessDeniedException("User is not authorized to update this expense");
         }
 
         // Only allow updates on DRAFT expenses
