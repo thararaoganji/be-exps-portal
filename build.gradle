@@ -4,6 +4,7 @@ import java.net.http.HttpResponse
 
 plugins {
 	id 'java'
+	id 'jacoco'
 	id 'org.springframework.boot' version '3.2.5'
 	id 'io.spring.dependency-management' version '1.1.5'
 	id "org.sonarqube" version "4.4.1.3373"
@@ -77,11 +78,11 @@ sonar {
 
 		def branch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 
-//		property "sonar.host.url", "http://localhost:9001"
+		property "sonar.host.url", "http://localhost:9000"
 		property "sonar.projectKey", "be-exps-portal"
 		property "sonar.projectName", "BE Expenses Portal"
 		property "sonar.branch.name", branch
-//		property "sonar.token", "squ_21e46fdb692b28cf01d89b027893fdb8d206b580"
+		property "sonar.token", "squ_1bee658a15a6cb4f05bebd6f4d29144898944ec0"
 	}
 }
 
