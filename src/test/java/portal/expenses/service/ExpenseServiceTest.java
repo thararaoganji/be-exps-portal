@@ -168,16 +168,14 @@ class ExpenseServiceTest {
         when(userRepository.findByUsername("unknown.user")).thenReturn(Optional.empty());
 
         // Act & Assert
-        LocalDate now = LocalDate.now();
-        BigDecimal amount = new BigDecimal("100.00");
         assertThrows(UsernameNotFoundException.class, () -> {
             expenseService.createExpense(
                 "Test",
-                amount,
+                new BigDecimal("100.00"),
                 null,
                 "unknown.user",
                 ExpenseCategory.OTHER,
-                now
+                LocalDate.now()
             );
         });
 
