@@ -35,7 +35,7 @@ public class UserService {
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toUserResponseDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public UserResponseDto createUser(UserCreateRequest request) {
