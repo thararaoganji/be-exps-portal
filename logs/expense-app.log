@@ -1,0 +1,38 @@
+2026-09-08T11:31:02.120+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Starting AuthControllerTest using Java 21.0.2 with PID 43001 (started by tganji in /private/tmp/sonar_remediation_techdebt/be-exps-portal)
+2026-09-08T11:31:02.120+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : No active profile set, falling back to 1 default profile: "default"
+2026-09-08T11:31:03.448+05:30  INFO 43001 --- [expenses-portal] [Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-08T11:31:03.448+05:30  INFO 43001 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-08T11:31:03.449+05:30  INFO 43001 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-08T11:31:03.504+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Started AuthControllerTest in 1.509 seconds (process running for 1.985)
+2026-09-08T11:31:03.543+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-08T11:31:03.565+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-08T11:31:03.567+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : User logged in successfully: user with roles: []
+2026-09-08T11:31:03.573+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (30ms)
+2026-09-08T11:31:03.594+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-08T11:31:03.598+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Validating token: valid-token...
+2026-09-08T11:31:03.598+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Extracted username from token: user
+2026-09-08T11:31:03.599+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token is VALID for user: user with roles: []
+2026-09-08T11:31:03.601+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (7ms)
+2026-09-08T11:31:03.605+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-08T11:31:03.605+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-08T11:31:03.606+05:30  WARN 43001 --- [expenses-portal] [Test worker] p.e.exception.GlobalExceptionHandler     : Authentication failed: Invalid credentials
+2026-09-08T11:31:03.609+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 401 (4ms)
+2026-09-08T11:31:03.612+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-08T11:31:03.612+05:30  WARN 43001 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token validation failed: Missing or invalid header
+2026-09-08T11:31:03.613+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 400 (1ms)
+2026-09-08T11:31:03.712+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=APPROVED
+2026-09-08T11:31:03.718+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=finance.jane, status=APPROVED
+2026-09-08T11:31:03.719+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=REJECTED
+2026-09-08T11:31:03.726+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=MANAGER_REVIEW
+2026-09-08T11:31:03.772+05:30  INFO 43001 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-08T11:31:03.779+05:30  INFO 43001 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-08T11:31:03.781+05:30  INFO 43001 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense reimbursed: ID=1
+2026-09-08T11:31:03.786+05:30  INFO 43001 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense submitted: ID=1, status=MANAGER_REVIEW, user=test.user
+2026-09-08T11:31:03.809+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-08T11:31:03.811+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-08T11:31:03.812+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-08T11:31:03.813+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=AUTO_APPROVED
+2026-09-08T11:31:03.814+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-08T11:31:03.814+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-08T11:31:03.815+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-08T11:31:03.816+05:30  INFO 43001 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
