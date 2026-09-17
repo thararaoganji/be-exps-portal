@@ -16,8 +16,12 @@ public class PasswordEncoderUtil {
         String managerPassword = "password-manager";
         String financePassword = "password-finance";
 
-        logger.info("Employee Password ('{}'): {}", employeePassword, encoder.encode(employeePassword));
-        logger.info("Manager Password ('{}'): {}", managerPassword, encoder.encode(managerPassword));
-        logger.info("Finance Password ('{}'): {}", financePassword, encoder.encode(financePassword));
+        String employeeHash = encoder.encode(employeePassword);
+        String managerHash = encoder.encode(managerPassword);
+        String financeHash = encoder.encode(financePassword);
+
+        logger.info("Employee Password ('{}'): {}", employeePassword, employeeHash);
+        logger.info("Manager Password ('{}'): {}", managerPassword, managerHash);
+        logger.info("Finance Password ('{}'): {}", financePassword, financeHash);
     }
 }
