@@ -36,3 +36,41 @@
 2026-09-17T21:05:26.915+05:30  INFO 24787 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
 2026-09-17T21:05:26.916+05:30  INFO 24787 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
 2026-09-17T21:05:26.917+05:30  INFO 24787 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-17T21:06:50.195+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Starting AuthControllerTest using Java 21.0.2 with PID 25147 (started by tganji in /private/tmp/sonar_remediation_techdebt/be-exps-portal)
+2026-09-17T21:06:50.196+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : No active profile set, falling back to 1 default profile: "default"
+2026-09-17T21:06:52.300+05:30  INFO 25147 --- [expenses-portal] [Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-09-17T21:06:52.301+05:30  INFO 25147 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-09-17T21:06:52.302+05:30  INFO 25147 --- [expenses-portal] [Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-09-17T21:06:52.389+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.controller.AuthControllerTest        : Started AuthControllerTest in 2.487 seconds (process running for 3.343)
+2026-09-17T21:06:52.459+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-17T21:06:52.498+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-17T21:06:52.500+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : User logged in successfully: user with roles: []
+2026-09-17T21:06:52.509+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (51ms)
+2026-09-17T21:06:52.550+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-17T21:06:52.555+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Validating token: valid-token...
+2026-09-17T21:06:52.555+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Extracted username from token: user
+2026-09-17T21:06:52.556+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token is VALID for user: user with roles: []
+2026-09-17T21:06:52.563+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 200 (13ms)
+2026-09-17T21:06:52.570+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: POST /auth/login 
+2026-09-17T21:06:52.570+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Login attempt for user: user
+2026-09-17T21:06:52.572+05:30  WARN 25147 --- [expenses-portal] [Test worker] p.e.exception.GlobalExceptionHandler     : Authentication failed: Invalid credentials
+2026-09-17T21:06:52.577+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 401 (8ms)
+2026-09-17T21:06:52.585+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : ==> Incoming Request: GET /auth/validate 
+2026-09-17T21:06:52.585+05:30  WARN 25147 --- [expenses-portal] [Test worker] p.expenses.controller.AuthController     : Token validation failed: Missing or invalid header
+2026-09-17T21:06:52.586+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.e.config.RequestResponseLoggingFilter  : <== Response: 400 (1ms)
+2026-09-17T21:06:52.759+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=APPROVED
+2026-09-17T21:06:52.770+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=finance.jane, status=APPROVED
+2026-09-17T21:06:52.772+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=REJECTED
+2026-09-17T21:06:52.782+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.ApprovalService       : Approval processed: expenseId=1, user=manager.john, status=MANAGER_REVIEW
+2026-09-17T21:06:52.844+05:30  INFO 25147 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-17T21:06:52.854+05:30  INFO 25147 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense created: ID=1, status=PENDING, user=test.user
+2026-09-17T21:06:52.856+05:30  INFO 25147 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense reimbursed: ID=1
+2026-09-17T21:06:52.862+05:30  INFO 25147 --- [expenses-portal] [Test worker] portal.expenses.service.ExpenseService   : Expense submitted: ID=1, status=MANAGER_REVIEW, user=test.user
+2026-09-17T21:06:52.901+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-17T21:06:52.903+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=PENDING
+2026-09-17T21:06:52.905+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-17T21:06:52.908+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=AUTO_APPROVED
+2026-09-17T21:06:52.910+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
+2026-09-17T21:06:52.912+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-17T21:06:52.913+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=FINANCE_REVIEW
+2026-09-17T21:06:52.915+05:30  INFO 25147 --- [expenses-portal] [Test worker] p.expenses.service.PolicyEngineService   : Policy evaluation complete: expenseId=1, status=MANAGER_REVIEW
