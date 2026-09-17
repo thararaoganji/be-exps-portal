@@ -1,7 +1,6 @@
 package portal.expenses.dto;
 
 import org.junit.jupiter.api.Test;
-import portal.expenses.entity.ExpenseCategory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
