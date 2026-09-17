@@ -9,9 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class PolicyRuleTest {
 
     @Test
-    void testGettersAndSetters() {
+    void testDefaultValues() {
         PolicyRule rule = new PolicyRule();
-
         // Check defaults
         assertTrue(rule.getEnabled());
         assertEquals(0, rule.getPriority());
@@ -27,8 +26,11 @@ class PolicyRuleTest {
         assertNull(rule.getActionReason());
         assertNull(rule.getCreatedAt());
         assertNull(rule.getUpdatedAt());
+    }
 
-        // Test setters
+    @Test
+    void testSettersAndGetters() {
+        PolicyRule rule = new PolicyRule();
         rule.setId(10L);
         assertEquals(10L, rule.getId());
 
