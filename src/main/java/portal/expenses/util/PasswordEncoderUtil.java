@@ -12,12 +12,23 @@ public class PasswordEncoderUtil {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
         // --- Generate hashes for your initial users ---
-        String employeePassword = "password-employee";
-        String managerPassword = "password-manager";
-        String financePassword = "password-finance";
+        String employeePassword = System.getenv("EMPLOYEE_PASSWORD");
+        String managerPassword = System.getenv("MANAGER_PASSWORD");
+        String financePassword = System.getenv("FINANCE_PASSWORD");
 
-        logger.info("Employee Password ('{}'): {}", employeePassword, encoder.encode(employeePassword));
-        logger.info("Manager Password ('{}'): {}", managerPassword, encoder.encode(managerPassword));
-        logger.info("Finance Password ('{}'): {}", financePassword, encoder.encode(financePassword));
+        if (logger.isInfoEnabled()) {
+            if (employeePassword != null) {
+                String encodedEmployeePassword = encoder.encode(employeePassword);
+                logger.info("Employee encoded password: {}", encodedEmployeePassword);
+            }
+            if (managerPassword != null) {
+                String encodedManagerPassword = encoder.encode(managerPassword);
+                logger.info("Manager encoded password: {}", encodedManagerPassword);
+            }
+            if (financePassword != null) {
+                String encodedFinancePassword = encoder.encode(financePassword);
+                logger.info("Finance encoded password: {}", encodedFinancePassword);
+            }
+        }
     }
 }
