@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,8 +26,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -139,7 +144,54 @@ class AuthControllerTest {
 
      */
 
+    @Test
+    void login_shouldThrowException_whenUserNotFoundInRepository() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        LoginRequest loginRequest = new LoginRequest("user", "password");
+        UserDetails userDetails = new User("user", "password", new ArrayList<>());
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("mock-jwt-token");
+        when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
 
+        assertThrows(RuntimeException.class, () -> controller.login(loginRequest));
+    }
 
+    @Test
+    void validateToken_shouldReturnBadRequest_whenAuthHeaderIsNull() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        ResponseEntity<Map<String, Object>> response = controller.validateToken(null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(false, response.getBody().get("valid"));
+    }
+
+    @Test
+    void validateToken_shouldReturnOkAndInvalid_whenTokenIsInvalid() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        UserDetails userDetails = new User("user", "password", new ArrayList<>());
+
+        when(jwtUtil.extractUsername("invalid-token")).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
+        when(jwtUtil.validateToken("invalid-token", userDetails)).thenReturn(false);
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer invalid-token");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("user", response.getBody().get("username"));
+    }
+
+    @Test
+    void validateToken_shouldReturnBadRequest_whenExceptionThrownDuringValidation() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        when(jwtUtil.extractUsername("broken-token")).thenThrow(new RuntimeException("Malformed token"));
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer broken-token");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Malformed token", response.getBody().get("error"));
+    }
 }
