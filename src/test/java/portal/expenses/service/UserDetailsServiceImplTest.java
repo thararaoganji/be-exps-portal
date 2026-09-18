@@ -57,4 +57,18 @@ class UserDetailsServiceImplTest {
             userDetailsService.loadUserByUsername("nonexistent");
         });
     }
+
+    @Test
+    void loadUserByUsername_shouldThrowExceptionWithExpectedMessage_whenUserDoesNotExist() {
+        // Arrange
+        String username = "unknown_user";
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class, () -> {
+            userDetailsService.loadUserByUsername(username);
+        });
+
+        assertEquals("User not found with username: " + username, exception.getMessage());
+    }
 }
