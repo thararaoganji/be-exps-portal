@@ -34,7 +34,6 @@ class AuditEntryTest {
         assertEquals("Approved by manager", entry.getComment());
 
         entry.setPerformedBy("john.doe");
-        assertEquals("performedBy", "performedBy", entry.getPerformedBy() != null ? "performedBy" : null);
         assertEquals("john.doe", entry.getPerformedBy());
 
         entry.setDetails("Details on action");
