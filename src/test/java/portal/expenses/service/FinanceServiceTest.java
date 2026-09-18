@@ -106,8 +106,10 @@ class FinanceServiceTest {
 
         byte[] result = financeService.exportReimbursedExpensesToCsv(null, null);
 
-        String expectedCsv = "Expense ID,Employee,Description,Amount,Category,Expense Date,Submitted Date,Status,Has Receipt\n" +
-                "1,john_doe,Flight ticket,150.00,null,2023-10-15,2023-10-16T12:00,REIMBURSED,true\n";
+        String expectedCsv = """
+                Expense ID,Employee,Description,Amount,Category,Expense Date,Submitted Date,Status,Has Receipt
+                1,john_doe,Flight ticket,150.00,null,2023-10-15,2023-10-16T12:00,REIMBURSED,true
+                """;
 
         assertArrayEquals(expectedCsv.getBytes(StandardCharsets.UTF_8), result);
     }
@@ -149,9 +151,11 @@ class FinanceServiceTest {
 
         byte[] result = financeService.exportReimbursedExpensesToCsv(startDateStr, endDateStr);
 
-        String expectedCsv = "Expense ID,Employee,Description,Amount,Category,Expense Date,Submitted Date,Status,Has Receipt\n" +
-                "1,\"Doe, \"\"Johnny\"\"\",\"Lunch\nDinner\",75.50,null,2023-10-10,2023-10-11T09:30,REIMBURSED,false\n" +
-                "2,,,20.00,null,2023-10-10,2023-10-11T09:30,REIMBURSED,true\n";
+        String expectedCsv = """
+                Expense ID,Employee,Description,Amount,Category,Expense Date,Submitted Date,Status,Has Receipt
+                1,"Doe, ""Johnny\""","Lunch\nDinner",75.50,null,2023-10-10,2023-10-11T09:30,REIMBURSED,false
+                2,,,20.00,null,2023-10-10,2023-10-11T09:30,REIMBURSED,true
+                """;
 
         assertArrayEquals(expectedCsv.getBytes(StandardCharsets.UTF_8), result);
     }
