@@ -105,15 +105,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.valid").value(false));
     }
 
-    /*
-
-    public static void main(String args[]){
-        System.out.println("display in test");
-    }
-
-     */
-
-
     @Test
     void validate_shouldReturnOkAndValid_whenTokenIsValid() throws Exception {
         // Arrange
@@ -130,16 +121,4 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.username").value("user"));
     }
-
-    /*
-
-    public static void main(String args[]){
-        System.out.println("welcome");
-    }
-
-     */
-
-
-
-
 }
