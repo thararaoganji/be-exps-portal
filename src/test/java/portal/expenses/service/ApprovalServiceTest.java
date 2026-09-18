@@ -285,7 +285,7 @@ class ApprovalServiceTest {
             .thenReturn(Collections.singletonList(existingApproval));
 
         // Act
-        Expense result = approvalService.processApproval(
+        approvalService.processApproval(
             1L, "manager.john", ApprovalStatus.APPROVED, "Updated comments"
         );
 
@@ -313,7 +313,7 @@ class ApprovalServiceTest {
             .thenReturn(Collections.singletonList(existingApproval));
 
         // Act
-        Expense result = approvalService.processApproval(
+        approvalService.processApproval(
             1L, "manager.john", ApprovalStatus.APPROVED, null
         );
 
