@@ -2,9 +2,13 @@ package portal.expenses.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "policy_rules")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -67,110 +71,5 @@ public class PolicyRule {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getRuleName() {
-        return ruleName;
-    }
-
-    public void setRuleName(String ruleName) {
-        this.ruleName = ruleName;
-    }
-
-    public PolicyRuleType getRuleType() {
-        return ruleType;
-    }
-
-    public void setRuleType(PolicyRuleType ruleType) {
-        this.ruleType = ruleType;
-    }
-
-    public Boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public Integer getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Integer priority) {
-        this.priority = priority;
-    }
-
-    public ExpenseCategory getConditionCategory() {
-        return conditionCategory;
-    }
-
-    public void setConditionCategory(ExpenseCategory conditionCategory) {
-        this.conditionCategory = conditionCategory;
-    }
-
-    public BigDecimal getConditionAmountMin() {
-        return conditionAmountMin;
-    }
-
-    public void setConditionAmountMin(BigDecimal conditionAmountMin) {
-        this.conditionAmountMin = conditionAmountMin;
-    }
-
-    public BigDecimal getConditionAmountMax() {
-        return conditionAmountMax;
-    }
-
-    public void setConditionAmountMax(BigDecimal conditionAmountMax) {
-        this.conditionAmountMax = conditionAmountMax;
-    }
-
-    public Integer getConditionAgeDays() {
-        return conditionAgeDays;
-    }
-
-    public void setConditionAgeDays(Integer conditionAgeDays) {
-        this.conditionAgeDays = conditionAgeDays;
-    }
-
-    public Boolean getConditionReceiptRequired() {
-        return conditionReceiptRequired;
-    }
-
-    public void setConditionReceiptRequired(Boolean conditionReceiptRequired) {
-        this.conditionReceiptRequired = conditionReceiptRequired;
-    }
-
-    public ApprovalStatus getActionApprovalStatus() {
-        return actionApprovalStatus;
-    }
-
-    public void setActionApprovalStatus(ApprovalStatus actionApprovalStatus) {
-        this.actionApprovalStatus = actionApprovalStatus;
-    }
-
-    public String getActionReason() {
-        return actionReason;
-    }
-
-    public void setActionReason(String actionReason) {
-        this.actionReason = actionReason;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 }
