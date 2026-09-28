@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -155,18 +156,19 @@ class ExpenseServiceTest {
     void testCreateExpense_UserNotFound_ThrowsException() {
         // Arrange
         when(userRepository.findByUsername("unknown.user")).thenReturn(Optional.empty());
+        BigDecimal amount = new BigDecimal("100.00");
+        LocalDate expenseDate = LocalDate.now();
 
         // Act & Assert
-        assertThrows(UsernameNotFoundException.class, () -> {
-            expenseService.createExpense(
+        Executable executable = () -> expenseService.createExpense(
                 "Test",
-                new BigDecimal("100.00"),
+                amount,
                 null,
                 "unknown.user",
                 ExpenseCategory.OTHER,
-                LocalDate.now()
-            );
-        });
+                expenseDate
+        );
+        assertThrows(UsernameNotFoundException.class, executable);
 
         verify(expenseRepository, never()).save(any());
     }
