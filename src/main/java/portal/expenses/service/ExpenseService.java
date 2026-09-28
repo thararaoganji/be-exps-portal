@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,19 @@ public class ExpenseService {
 
     @Transactional
     public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
+                                 String username, ExpenseCategory category, LocalDate expenseDate,
+                                 boolean draft) throws IOException {
+        return createExpenseInternal(description, amount, receipt, username, category, expenseDate, draft);
+    }
+
+    // Overload for backward compatibility
+    @Transactional
+    public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
+                                 String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
+        return createExpenseInternal(description, amount, receipt, username, category, expenseDate, false);
+    }
+
+    private Expense createExpenseInternal(String description, BigDecimal amount, MultipartFile receipt,
                                  String username, ExpenseCategory category, LocalDate expenseDate,
                                  boolean draft) throws IOException {
         AppUser user = userRepository.findByUsername(username)
@@ -130,13 +144,6 @@ public class ExpenseService {
         return expense;
     }
 
-    // Overload for backward compatibility
-    @Transactional
-    public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
-                                 String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
-        return this.createExpense(description, amount, receipt, username, category, expenseDate, false);
-    }
-
     public List<Expense> getExpensesForUser(Long userId) {
         return expenseRepository.findByUserId(userId);
     }
@@ -162,7 +169,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to submit this expense");
+            throw new AccessDeniedException("User is not authorized to submit this expense");
         }
 
         // Validate that expense is in DRAFT status (or PENDING for backward compatibility)
@@ -208,7 +215,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to update this expense");
+            throw new AccessDeniedException("User is not authorized to update this expense");
         }
 
         // Only allow updates on DRAFT expenses
