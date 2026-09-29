@@ -1,6 +1,5 @@
 package portal.expenses.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,7 +12,6 @@ import portal.expenses.dto.UserCreateRequest;
 import portal.expenses.dto.UserResponseDto;
 import portal.expenses.service.UserService;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
