@@ -69,7 +69,7 @@ class PolicyRuleTest {
     }
 
     @Test
-    void testLifecycleCallbacks() throws InterruptedException {
+    void testLifecycleCallbacks() {
         PolicyRule rule = new PolicyRule();
 
         assertNull(rule.getCreatedAt());
@@ -86,8 +86,6 @@ class PolicyRuleTest {
 
         LocalDateTime originalCreatedAt = rule.getCreatedAt();
         LocalDateTime previousUpdatedAt = rule.getUpdatedAt();
-
-        Thread.sleep(10);
 
         rule.onUpdate();
 
