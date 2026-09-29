@@ -13,7 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import portal.expenses.entity.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,6 +47,7 @@ class PolicyEngineServiceTest {
         testExpense.setUser(testUser);
         testExpense.setCategory(ExpenseCategory.MEALS);
         testExpense.setHasReceipt(true);
+        testExpense.setExpenseDate(LocalDate.now());
     }
 
     @Test
@@ -258,5 +261,170 @@ class PolicyEngineServiceTest {
         assertNotNull(result);
         Assertions.assertEquals(ApprovalStatus.MANAGER_REVIEW, result.getFinalStatus());
         assertTrue(result.getReason().contains("Missing receipt") || result.getReason().contains("receipt"));
+    }
+
+    @Test
+    @DisplayName("Test 9: Immediate rejection rule stops evaluation and saves rejection record")
+    void testEvaluateExpense_ImmediateRejection() {
+        testExpense.setAmount(new BigDecimal("5000.00"));
+        testExpense.setHasReceipt(true);
+
+        PolicyRule rejectRule = new PolicyRule();
+        rejectRule.setRuleName("OVER_POLICY_LIMIT");
+        rejectRule.setRuleType(PolicyRuleType.AMOUNT_THRESHOLD);
+        rejectRule.setConditionAmountMin(new BigDecimal("4000.00"));
+        rejectRule.setActionApprovalStatus(ApprovalStatus.REJECTED);
+        rejectRule.setActionReason("Expense exceeds absolute limit");
+        rejectRule.setEnabled(true);
+        rejectRule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(rejectRule));
+
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.REJECTED, result.getFinalStatus());
+        assertEquals("Expense exceeds absolute limit", result.getReason());
+        assertEquals(rejectRule, result.getAppliedRule());
+        assertEquals(testExpense, result.getExpense());
+        verify(expenseApprovalRepository, times(1)).save(any(ExpenseApproval.class));
+    }
+
+    @Test
+    @DisplayName("Test 10: Category rule matches and non-matches")
+    void testEvaluateExpense_CategoryRule() {
+        testExpense.setCategory(ExpenseCategory.TRAVEL);
+        testExpense.setAmount(new BigDecimal("150.00"));
+
+        PolicyRule categoryRule = new PolicyRule();
+        categoryRule.setRuleName("TRAVEL_RULE");
+        categoryRule.setRuleType(PolicyRuleType.CATEGORY_RULE);
+        categoryRule.setConditionCategory(ExpenseCategory.TRAVEL);
+        categoryRule.setActionApprovalStatus(ApprovalStatus.MANAGER_REVIEW);
+        categoryRule.setActionReason("Travel requires review");
+        categoryRule.setEnabled(true);
+        categoryRule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(categoryRule));
+
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.MANAGER_REVIEW, result.getFinalStatus());
+
+        // Now test when category does not match
+        testExpense.setCategory(ExpenseCategory.MEALS);
+        PolicyEngineService.ApprovalDecision nonMatchResult = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.PENDING, nonMatchResult.getFinalStatus());
+    }
+
+    @Test
+    @DisplayName("Test 11: Age limit rule matches when expense is older than threshold")
+    void testEvaluateExpense_AgeLimitRule() {
+        testExpense.setAmount(new BigDecimal("50.00"));
+        testExpense.setExpenseDate(LocalDate.now().minusDays(45));
+
+        PolicyRule ageRule = new PolicyRule();
+        ageRule.setRuleName("OLD_EXPENSE_RULE");
+        ageRule.setRuleType(PolicyRuleType.AGE_LIMIT);
+        ageRule.setConditionAgeDays(30);
+        ageRule.setActionApprovalStatus(ApprovalStatus.REJECTED);
+        ageRule.setActionReason("Expense submitted past 30 days window");
+        ageRule.setEnabled(true);
+        ageRule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(ageRule));
+
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.REJECTED, result.getFinalStatus());
+    }
+
+    @Test
+    @DisplayName("Test 12: Age limit rule with null conditionAgeDays returns false")
+    void testEvaluateExpense_AgeLimitRule_NullDays() {
+        testExpense.setAmount(new BigDecimal("50.00"));
+        testExpense.setExpenseDate(LocalDate.now().minusDays(45));
+
+        PolicyRule ageRule = new PolicyRule();
+        ageRule.setRuleName("OLD_EXPENSE_RULE_NULL");
+        ageRule.setRuleType(PolicyRuleType.AGE_LIMIT);
+        ageRule.setConditionAgeDays(null);
+        ageRule.setActionApprovalStatus(ApprovalStatus.MANAGER_REVIEW);
+        ageRule.setEnabled(true);
+        ageRule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(ageRule));
+
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.PENDING, result.getFinalStatus());
+    }
+
+    @Test
+    @DisplayName("Test 13: Receipt required rule with category condition mismatch")
+    void testEvaluateExpense_ReceiptRequiredCategoryMismatch() {
+        testExpense.setCategory(ExpenseCategory.MEALS);
+        testExpense.setHasReceipt(false);
+        testExpense.setAmount(new BigDecimal("20.00"));
+
+        PolicyRule receiptRule = new PolicyRule();
+        receiptRule.setRuleName("TRAVEL_RECEIPT_REQUIRED");
+        receiptRule.setRuleType(PolicyRuleType.RECEIPT_REQUIRED);
+        receiptRule.setConditionCategory(ExpenseCategory.TRAVEL);
+        receiptRule.setConditionReceiptRequired(true);
+        receiptRule.setActionApprovalStatus(ApprovalStatus.MANAGER_REVIEW);
+        receiptRule.setEnabled(true);
+        receiptRule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(receiptRule));
+
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.PENDING, result.getFinalStatus());
+    }
+
+    @Test
+    @DisplayName("Test 14: Amount threshold conditions min and max branches")
+    void testEvaluateAmountThreshold_MinAndMax() {
+        testExpense.setAmount(new BigDecimal("100.00"));
+
+        PolicyRule rule = new PolicyRule();
+        rule.setRuleName("AMOUNT_RANGE");
+        rule.setRuleType(PolicyRuleType.AMOUNT_THRESHOLD);
+        rule.setConditionAmountMin(new BigDecimal("50.00"));
+        rule.setConditionAmountMax(new BigDecimal("150.00"));
+        rule.setActionApprovalStatus(ApprovalStatus.AUTO_APPROVED);
+        rule.setActionReason("Within range");
+        rule.setEnabled(true);
+        rule.setPriority(1);
+
+        when(policyRuleRepository.findAllEnabledOrderedByPriority()).thenReturn(Collections.singletonList(rule));
+
+        // Matches range [50, 150]
+        PolicyEngineService.ApprovalDecision result = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.AUTO_APPROVED, result.getFinalStatus());
+
+        // Less than min
+        testExpense.setAmount(new BigDecimal("40.00"));
+        PolicyEngineService.ApprovalDecision resultMin = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.PENDING, resultMin.getFinalStatus());
+
+        // Greater than max
+        testExpense.setAmount(new BigDecimal("200.00"));
+        PolicyEngineService.ApprovalDecision resultMax = policyEngineService.evaluateExpense(testExpense);
+        assertEquals(ApprovalStatus.PENDING, resultMax.getFinalStatus());
+    }
+
+    @Test
+    @DisplayName("Test 15: ApprovalDecision getters and setters")
+    void testApprovalDecisionGettersAndSetters() {
+        PolicyEngineService.ApprovalDecision decision = new PolicyEngineService.ApprovalDecision();
+        decision.setExpense(testExpense);
+        decision.setFinalStatus(ApprovalStatus.APPROVED);
+        PolicyRule rule = new PolicyRule();
+        decision.setAppliedRule(rule);
+        decision.setReason("Custom reason");
+
+        assertEquals(testExpense, decision.getExpense());
+        assertEquals(ApprovalStatus.APPROVED, decision.getFinalStatus());
+        assertEquals(rule, decision.getAppliedRule());
+        assertEquals("Custom reason", decision.getReason());
     }
 }
