@@ -13,6 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JwtUtilTest {
@@ -58,9 +59,7 @@ class JwtUtilTest {
         ReflectionTestUtils.setField(jwtUtil, "expirationMs", -1000L);
         UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
 
-        // Token generated with negative expiration is already expired
-        // Parsing expired token might throw ExpiredJwtException in JJWT, but let's test extract / validate
-        // Or if expiration is 0 / past, validateToken checks !extractExpiration(token).before(new Date())
-        // Note: JJWT parseClaimsJws will throw ExpiredJwtException if expired when parsing.
+        String token = jwtUtil.generateToken(userDetails);
+        assertThrows(Exception.class, () -> jwtUtil.validateToken(token, userDetails));
     }
 }
