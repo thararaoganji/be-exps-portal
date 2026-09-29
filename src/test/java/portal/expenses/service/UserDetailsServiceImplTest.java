@@ -53,8 +53,15 @@ class UserDetailsServiceImplTest {
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UsernameNotFoundException.class, () -> {
+        UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class, () -> {
             userDetailsService.loadUserByUsername("nonexistent");
         });
+        assertEquals("User not found with username: nonexistent", exception.getMessage());
+    }
+
+    @Test
+    void constructor_shouldCreateInstance() {
+        UserDetailsServiceImpl service = new UserDetailsServiceImpl(userRepository);
+        assertNotNull(service);
     }
 }
