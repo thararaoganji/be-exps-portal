@@ -2,8 +2,6 @@ package portal.expenses.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -12,6 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -68,6 +67,8 @@ class RequestResponseLoggingFilterTest {
         };
 
         filter.doFilterInternal(request, response, filterChain);
+
+        assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -97,5 +98,7 @@ class RequestResponseLoggingFilterTest {
         };
 
         filter.doFilterInternal(request, response, filterChain);
+
+        assertEquals(204, response.getStatus());
     }
 }
