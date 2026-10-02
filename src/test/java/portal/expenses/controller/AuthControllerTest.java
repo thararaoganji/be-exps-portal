@@ -111,14 +111,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.valid").value(false));
     }
 
-    /*
-
-    public static void main(String args[]){
-        System.out.println("display in test");
-    }
-
-     */
-
 
     @Test
     void validate_shouldReturnOkAndValid_whenTokenIsValid() throws Exception {
@@ -137,14 +129,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.username").value("user"));
     }
 
-    /*
-
-    public static void main(String args[]){
-        System.out.println("welcome");
-    }
-
-     */
-
     @Test
     void login_directCall_throwsWhenUserNotFound() {
         AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
@@ -153,9 +137,10 @@ class AuthControllerTest {
 
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("token");
-        when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
+        LoginRequest loginRequest = new LoginRequest("user", "password");
 
-        assertThrows(RuntimeException.class, () -> controller.login(new LoginRequest("user", "password")));
+        when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> controller.login(loginRequest));
     }
 
     @Test
