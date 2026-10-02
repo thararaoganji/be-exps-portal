@@ -132,9 +132,7 @@ public class ApprovalService {
                         "Invalid transition from FINANCE_REVIEW to " + newStatus);
                 }
                 break;
-            case AUTO_APPROVED:
-            case APPROVED:
-            case REJECTED:
+            case AUTO_APPROVED, APPROVED, REJECTED:
                 throw new IllegalStateException(
                     "Cannot change status of expense in " + currentStatus + " state");
             default:
@@ -160,13 +158,11 @@ public class ApprovalService {
      * Determine the action name based on approval level and status
      */
     private String determineActionName(String approvalLevel, ApprovalStatus status) {
-        if (status == ApprovalStatus.APPROVED) {
-            return approvalLevel + "_APPROVED";
-        } else if (status == ApprovalStatus.REJECTED) {
-            return approvalLevel + "_REJECTED";
-        } else {
-            return "STATUS_CHANGE";
-        }
+        return switch (status) {
+            case APPROVED -> approvalLevel + "_APPROVED";
+            case REJECTED -> approvalLevel + "_REJECTED";
+            default -> "STATUS_CHANGE";
+        };
     }
 
     /**
