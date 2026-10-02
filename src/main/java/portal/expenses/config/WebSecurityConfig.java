@@ -49,6 +49,7 @@ public class WebSecurityConfig {
      */
     @Bean
     @Order(0)
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain actuatorSecurity(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/actuator/**")
@@ -90,6 +91,7 @@ public class WebSecurityConfig {
      */
     @Bean
     @Order(1)
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain appSecurity(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
