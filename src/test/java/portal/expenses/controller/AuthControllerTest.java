@@ -6,6 +6,7 @@ import portal.expenses.config.CustomAuthenticationEntryPoint;
 import portal.expenses.config.JwtAuthFilter;
 import portal.expenses.config.WebSecurityConfig;
 import portal.expenses.dto.LoginRequest;
+import portal.expenses.dto.LoginResponse;
 import portal.expenses.entity.AppUser;
 import portal.expenses.repository.UserRepository;
 import portal.expenses.service.UserDetailsServiceImpl;
@@ -14,18 +15,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import portal.expenses.util.JwtUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -139,7 +146,59 @@ class AuthControllerTest {
 
      */
 
+    @Test
+    void validateToken_directCall_whenTokenIsInvalid() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        UserDetails userDetails = new User("user", "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
+        when(jwtUtil.extractUsername("invalid-token")).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
+        when(jwtUtil.validateToken("invalid-token", userDetails)).thenReturn(false);
 
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer invalid-token");
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("user", response.getBody().get("username"));
+    }
+
+    @Test
+    void validateToken_directCall_whenAuthHeaderIsNull() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken(null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+    }
+
+    @Test
+    void validateToken_directCall_whenExceptionThrown() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+
+        when(jwtUtil.extractUsername("bad-token")).thenThrow(new RuntimeException("Token error"));
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer bad-token");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Token error", response.getBody().get("error"));
+    }
+
+    @Test
+    void login_directCall_userNotFound_shouldThrowRuntimeException() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        LoginRequest loginRequest = new LoginRequest("user", "password");
+        UserDetails userDetails = new User("user", "password", new ArrayList<>());
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("mock-jwt-token");
+        when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> controller.login(loginRequest));
+    }
 }
