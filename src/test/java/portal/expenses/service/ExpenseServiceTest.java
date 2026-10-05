@@ -1,8 +1,5 @@
 package portal.expenses.service;
 
-import portal.expenses.repository.AuditEntryRepository;
-import portal.expenses.repository.ExpenseRepository;
-import portal.expenses.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,14 +7,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import portal.expenses.entity.*;
+import org.springframework.test.util.ReflectionTestUtils;
+import portal.expenses.dto.ExpenseFilterRequest;
+import portal.expenses.dto.PageResponse;
+import portal.expenses.entity.AppUser;
+import portal.expenses.entity.ApprovalStatus;
+import portal.expenses.entity.AuditEntry;
+import portal.expenses.entity.Expense;
+import portal.expenses.entity.ExpenseCategory;
+import portal.expenses.repository.AuditEntryRepository;
+import portal.expenses.repository.ExpenseRepository;
+import portal.expenses.repository.UserRepository;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -331,5 +342,250 @@ class ExpenseServiceTest {
         assertEquals(2, result.size());
         assertEquals("CREATED", result.get(0).getAction());
         assertEquals("SUBMITTED", result.get(1).getAction());
+    }
+
+    @Test
+    @DisplayName("Test 13: Create expense with S3 storage mode and draft flag true")
+    void testCreateExpense_S3Storage_Draft() throws IOException {
+        ReflectionTestUtils.setField(expenseService, "storageMode", "s3");
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.of(testUser));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MockMultipartFile receipt = new MockMultipartFile(
+                "receipt", "receipt.png", "image/png", "png bytes".getBytes()
+        );
+
+        Expense result = expenseService.createExpense(
+                "Draft Expense",
+                new BigDecimal("50.00"),
+                receipt,
+                "test.user",
+                null,
+                null,
+                true
+        );
+
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.DRAFT, result.getApprovalStatus());
+        assertEquals(ExpenseCategory.OTHER, result.getCategory());
+        assertNotNull(result.getExpenseDate());
+        verify(s3Service).uploadFile(anyString(), any(byte[].class));
+        verify(policyEngineService, never()).evaluateExpense(any());
+        verify(expenseRepository, times(1)).save(any(Expense.class));
+        verify(auditEntryRepository, times(1)).save(any(AuditEntry.class));
+    }
+
+    @Test
+    @DisplayName("Test 14: Get expenses for user with ID")
+    void testGetExpensesForUser() {
+        when(expenseRepository.findByUserId(10L)).thenReturn(Collections.singletonList(testExpense));
+        List<Expense> expenses = expenseService.getExpensesForUser(10L);
+        assertEquals(1, expenses.size());
+        verify(expenseRepository).findByUserId(10L);
+    }
+
+    @Test
+    @DisplayName("Test 15: Get expenses for current user throws when user not found")
+    void testGetExpensesForCurrentUser_UserNotFound() {
+        when(userRepository.findByUsername("missing.user")).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> expenseService.getExpensesForCurrentUser("missing.user"));
+    }
+
+    @Test
+    @DisplayName("Test 16: Submit expense fails when expense is in invalid status")
+    void testSubmitExpense_InvalidStatus() {
+        testExpense.setApprovalStatus(ApprovalStatus.APPROVED);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+
+        assertThrows(IllegalStateException.class, () -> expenseService.submitExpense(1L, "test.user"));
+    }
+
+    @Test
+    @DisplayName("Test 17: Submit expense throws when user not found during audit creation")
+    void testSubmitExpense_UserNotFoundAudit() {
+        testExpense.setApprovalStatus(ApprovalStatus.DRAFT);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        PolicyEngineService.ApprovalDecision decision = new PolicyEngineService.ApprovalDecision();
+        decision.setFinalStatus(ApprovalStatus.PENDING);
+        decision.setReason("Evaluating");
+        when(policyEngineService.evaluateExpense(any(Expense.class))).thenReturn(decision);
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> expenseService.submitExpense(1L, "test.user"));
+    }
+
+    @Test
+    @DisplayName("Test 18: Update draft expense with receipt - local storage")
+    void testUpdateExpense_Draft_LocalStorage() throws IOException {
+        testExpense.setApprovalStatus(ApprovalStatus.DRAFT);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.of(testUser));
+
+        MockMultipartFile receipt = new MockMultipartFile(
+                "receipt", "new_receipt.pdf", "application/pdf", "pdf bytes".getBytes()
+        );
+
+        Expense updated = expenseService.updateExpense(
+                1L,
+                "Updated Description",
+                new BigDecimal("150.00"),
+                receipt,
+                "test.user",
+                ExpenseCategory.TRAVEL,
+                LocalDate.of(2025, 1, 1)
+        );
+
+        assertNotNull(updated);
+        assertEquals("Updated Description", updated.getDescription());
+        assertEquals(new BigDecimal("150.00"), updated.getAmount());
+        assertEquals(ExpenseCategory.TRAVEL, updated.getCategory());
+        assertEquals(LocalDate.of(2025, 1, 1), updated.getExpenseDate());
+        assertTrue(updated.getHasReceipt());
+        verify(localStorageService).uploadFile(anyString(), any(byte[].class));
+        verify(auditEntryRepository).save(any(AuditEntry.class));
+    }
+
+    @Test
+    @DisplayName("Test 19: Update draft expense with S3 storage")
+    void testUpdateExpense_Draft_S3Storage() throws IOException {
+        ReflectionTestUtils.setField(expenseService, "storageMode", "s3");
+        testExpense.setApprovalStatus(ApprovalStatus.DRAFT);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.of(testUser));
+
+        MockMultipartFile receipt = new MockMultipartFile(
+                "receipt", "new_receipt.pdf", "application/pdf", "pdf bytes".getBytes()
+        );
+
+        Expense updated = expenseService.updateExpense(
+                1L,
+                null,
+                null,
+                receipt,
+                "test.user",
+                null,
+                null
+        );
+
+        assertNotNull(updated);
+        verify(s3Service).uploadFile(anyString(), any(byte[].class));
+        verify(auditEntryRepository).save(any(AuditEntry.class));
+    }
+
+    @Test
+    @DisplayName("Test 20: Update expense throws when unauthorized or non-draft")
+    void testUpdateExpense_Exceptions() {
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+
+        // Unauthorized user
+        assertThrows(RuntimeException.class, () -> expenseService.updateExpense(
+                1L, "Desc", BigDecimal.TEN, null, "different.user", null, null
+        ));
+
+        // Non-draft expense
+        testExpense.setApprovalStatus(ApprovalStatus.APPROVED);
+        assertThrows(IllegalStateException.class, () -> expenseService.updateExpense(
+                1L, "Desc", BigDecimal.TEN, null, "test.user", null, null
+        ));
+    }
+
+    @Test
+    @DisplayName("Test 21: Update expense throws when user not found for audit")
+    void testUpdateExpense_UserNotFoundAudit() {
+        testExpense.setApprovalStatus(ApprovalStatus.DRAFT);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> expenseService.updateExpense(
+                1L, "Desc", BigDecimal.TEN, null, "test.user", null, null
+        ));
+    }
+
+    @Test
+    @DisplayName("Test 22: Get expenses for user with date range")
+    void testGetExpensesForUserWithDateRange() {
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findByUserAndExpenseDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Collections.singletonList(testExpense));
+        when(expenseRepository.findByUser(testUser)).thenReturn(Collections.singletonList(testExpense));
+
+        // With dates
+        List<Expense> withDates = expenseService.getExpensesForUserWithDateRange("test.user", "2025-01-01", "2025-01-31");
+        assertEquals(1, withDates.size());
+
+        // Without dates
+        List<Expense> withoutDates = expenseService.getExpensesForUserWithDateRange("test.user", null, null);
+        assertEquals(1, withoutDates.size());
+
+        // User not found
+        when(userRepository.findByUsername("missing.user")).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () ->
+                expenseService.getExpensesForUserWithDateRange("missing.user", null, null));
+    }
+
+    @Test
+    @DisplayName("Test 23: Get expenses with filters for user")
+    void testGetExpensesWithFilters() {
+        when(userRepository.findByUsername("test.user")).thenReturn(Optional.of(testUser));
+        Page<Expense> page = new PageImpl<>(Collections.singletonList(testExpense));
+        when(expenseRepository.findByFilters(
+                eq(testUser.getId()),
+                any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)
+        )).thenReturn(page);
+
+        ExpenseFilterRequest filter = new ExpenseFilterRequest();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setSortBy("expenseDate");
+        filter.setSortDirection("DESC");
+
+        PageResponse<Expense> response = expenseService.getExpensesWithFilters("test.user", filter);
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+
+        // User not found
+        when(userRepository.findByUsername("missing.user")).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () ->
+                expenseService.getExpensesWithFilters("missing.user", filter));
+    }
+
+    @Test
+    @DisplayName("Test 24: Get all expenses with filters (no user restriction)")
+    void testGetAllExpensesWithFilters() {
+        Page<Expense> page = new PageImpl<>(Collections.singletonList(testExpense));
+        when(expenseRepository.findByFilters(
+                isNull(),
+                any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)
+        )).thenReturn(page);
+
+        ExpenseFilterRequest filter = new ExpenseFilterRequest();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setSortBy("amount");
+        filter.setSortDirection("ASC");
+
+        PageResponse<Expense> response = expenseService.getAllExpensesWithFilters(filter);
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+    }
+
+    @Test
+    @DisplayName("Test 25: Get expenses by status with pagination")
+    void testGetExpensesByStatusWithPagination() {
+        Page<Expense> page = new PageImpl<>(Collections.singletonList(testExpense));
+        when(expenseRepository.findByApprovalStatus(eq(ApprovalStatus.PENDING), any(Pageable.class)))
+                .thenReturn(page);
+
+        PageResponse<Expense> response = expenseService.getExpensesByStatusWithPagination(
+                ApprovalStatus.PENDING, 0, 5, "id", "DESC"
+        );
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
     }
 }
