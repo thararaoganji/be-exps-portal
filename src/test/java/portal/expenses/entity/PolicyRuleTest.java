@@ -72,7 +72,7 @@ class PolicyRuleTest {
     }
 
     @Test
-    void testLifecycleHooks() throws InterruptedException {
+    void testLifecycleHooks() {
         PolicyRule rule = new PolicyRule();
 
         assertNull(rule.getCreatedAt());
@@ -85,7 +85,6 @@ class PolicyRuleTest {
         assertNotNull(created);
         assertNotNull(updated);
 
-        Thread.sleep(10);
         rule.onUpdate();
 
         assertEquals(created, rule.getCreatedAt());
