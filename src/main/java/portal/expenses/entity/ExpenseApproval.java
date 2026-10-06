@@ -3,7 +3,11 @@ package portal.expenses.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "expense_approvals")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -50,70 +54,5 @@ public class ExpenseApproval {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Expense getExpense() {
-        return expense;
-    }
-
-    public void setExpense(Expense expense) {
-        this.expense = expense;
-    }
-
-    public String getApprovalLevel() {
-        return approvalLevel;
-    }
-
-    public void setApprovalLevel(String approvalLevel) {
-        this.approvalLevel = approvalLevel;
-    }
-
-    public ApprovalStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ApprovalStatus status) {
-        this.status = status;
-    }
-
-    public AppUser getApprover() {
-        return approver;
-    }
-
-    public void setApprover(AppUser approver) {
-        this.approver = approver;
-    }
-
-    public String getComments() {
-        return comments;
-    }
-
-    public void setComments(String comments) {
-        this.comments = comments;
-    }
-
-    public PolicyRule getAppliedRule() {
-        return appliedRule;
-    }
-
-    public void setAppliedRule(PolicyRule appliedRule) {
-        this.appliedRule = appliedRule;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 }
