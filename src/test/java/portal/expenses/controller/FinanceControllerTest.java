@@ -16,7 +16,6 @@ import portal.expenses.entity.Expense;
 import portal.expenses.service.ExpenseService;
 import portal.expenses.service.FinanceService;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
