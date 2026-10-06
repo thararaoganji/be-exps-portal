@@ -31,7 +31,7 @@ public class FinanceController {
     /**
      * Get all expenses that are approved and ready for reimbursement
      */
-    @GetMapping("/reimbursement-queue")
+    @GetMapping({"/reimbursement-queue", "/approved"})
     public ResponseEntity<List<Expense>> getReimbursementQueue() {
         List<Expense> expenses = expenseService.getExpensesByStatus(ApprovalStatus.APPROVED);
         return ResponseEntity.ok(expenses);
@@ -98,14 +98,5 @@ public class FinanceController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reimbursed_expenses.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(new ByteArrayResource(csvData));
-    }
-
-    /**
-     * Get all approved expenses (for finance review)
-     */
-    @GetMapping("/approved")
-    public ResponseEntity<List<Expense>> getApprovedExpenses() {
-        List<Expense> expenses = expenseService.getExpensesByStatus(ApprovalStatus.APPROVED);
-        return ResponseEntity.ok(expenses);
     }
 }
