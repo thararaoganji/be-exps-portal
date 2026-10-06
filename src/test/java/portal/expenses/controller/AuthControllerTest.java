@@ -6,6 +6,7 @@ import portal.expenses.config.CustomAuthenticationEntryPoint;
 import portal.expenses.config.JwtAuthFilter;
 import portal.expenses.config.WebSecurityConfig;
 import portal.expenses.dto.LoginRequest;
+import portal.expenses.dto.LoginResponse;
 import portal.expenses.entity.AppUser;
 import portal.expenses.repository.UserRepository;
 import portal.expenses.service.UserDetailsServiceImpl;
@@ -14,19 +15,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import portal.expenses.util.JwtUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -139,7 +151,106 @@ class AuthControllerTest {
 
      */
 
+    @Test
+    void login_shouldThrowException_whenUserNotFoundInRepository() {
+        AuthenticationManager authMgr = mock(AuthenticationManager.class);
+        JwtUtil jwt = mock(JwtUtil.class);
+        UserDetailsServiceImpl uds = mock(UserDetailsServiceImpl.class);
+        UserRepository userRepo = mock(UserRepository.class);
 
+        AuthController controller = new AuthController(authMgr, jwt, uds, userRepo);
 
+        LoginRequest loginRequest = new LoginRequest("unknown", "password");
+        UserDetails userDetails = new User("unknown", "password", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
+        when(authMgr.authenticate(any())).thenReturn(authentication);
+        when(jwt.generateToken(any(UserDetails.class))).thenReturn("token");
+        when(userRepo.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> controller.login(loginRequest));
+        assertTrue(exception.getMessage().contains("User not found: unknown"));
+    }
+
+    @Test
+    void login_unitTest_shouldReturnLoginResponse() {
+        AuthenticationManager authMgr = mock(AuthenticationManager.class);
+        JwtUtil jwt = mock(JwtUtil.class);
+        UserDetailsServiceImpl uds = mock(UserDetailsServiceImpl.class);
+        UserRepository userRepo = mock(UserRepository.class);
+
+        AuthController controller = new AuthController(authMgr, jwt, uds, userRepo);
+
+        LoginRequest loginRequest = new LoginRequest("user", "pass");
+        UserDetails userDetails = new User("user", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        AppUser appUser = new AppUser();
+        appUser.setUsername("user");
+        appUser.setName("Admin User");
+
+        when(authMgr.authenticate(any())).thenReturn(authentication);
+        when(jwt.generateToken(userDetails)).thenReturn("jwt-123");
+        when(userRepo.findByUsername("user")).thenReturn(Optional.of(appUser));
+
+        LoginResponse response = controller.login(loginRequest);
+        assertNotNull(response);
+        assertEquals("jwt-123", response.token());
+        assertEquals("user", response.username());
+        assertEquals("Admin User", response.name());
+        assertEquals(List.of("ROLE_ADMIN"), response.roles());
+    }
+
+    @Test
+    void validateToken_unitTest_shouldHandleNullHeader() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        ResponseEntity<Map<String, Object>> response = controller.validateToken(null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Missing or invalid Authorization header", response.getBody().get("error"));
+    }
+
+    @Test
+    void validateToken_unitTest_shouldHandleInvalidTokenFlag() {
+        AuthenticationManager authMgr = mock(AuthenticationManager.class);
+        JwtUtil jwt = mock(JwtUtil.class);
+        UserDetailsServiceImpl uds = mock(UserDetailsServiceImpl.class);
+        UserRepository userRepo = mock(UserRepository.class);
+
+        AuthController controller = new AuthController(authMgr, jwt, uds, userRepo);
+
+        UserDetails userDetails = new User("user", "pass", List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        when(jwt.extractUsername("invalid-token")).thenReturn("user");
+        when(uds.loadUserByUsername("user")).thenReturn(userDetails);
+        when(jwt.validateToken("invalid-token", userDetails)).thenReturn(false);
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer invalid-token");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertFalse((Boolean) response.getBody().get("valid"));
+        assertEquals("user", response.getBody().get("username"));
+        assertEquals(List.of("ROLE_USER"), response.getBody().get("roles"));
+    }
+
+    @Test
+    void validateToken_unitTest_shouldHandleException() {
+        AuthenticationManager authMgr = mock(AuthenticationManager.class);
+        JwtUtil jwt = mock(JwtUtil.class);
+        UserDetailsServiceImpl uds = mock(UserDetailsServiceImpl.class);
+        UserRepository userRepo = mock(UserRepository.class);
+
+        AuthController controller = new AuthController(authMgr, jwt, uds, userRepo);
+
+        when(jwt.extractUsername("error-token")).thenThrow(new RuntimeException("Token expired"));
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer error-token");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Token expired", response.getBody().get("error"));
+    }
 }
