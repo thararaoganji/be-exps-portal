@@ -15,6 +15,7 @@ import portal.expenses.entity.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -241,5 +242,143 @@ class ApprovalServiceTest {
                 1L, "manager.john", ApprovalStatus.MANAGER_REVIEW, "Sent to manager"
             );
         });
+    }
+
+    @Test
+    @DisplayName("Test 9: Updates existing pending approval record and handles null comment")
+    void testProcessApproval_UpdatesExistingApproval_WithNullComment() {
+        // Arrange
+        ExpenseApproval existingApproval = new ExpenseApproval();
+        existingApproval.setId(10L);
+        existingApproval.setStatus(ApprovalStatus.MANAGER_REVIEW);
+        existingApproval.setApprovalLevel("MANAGER");
+        existingApproval.setComments("Old comment");
+
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("manager.john")).thenReturn(Optional.of(manager));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+        when(expenseApprovalRepository.findByExpenseIdOrderByCreatedAtAsc(1L))
+            .thenReturn(Collections.singletonList(existingApproval));
+
+        // Act
+        Expense result = approvalService.processApproval(
+            1L, "manager.john", ApprovalStatus.FINANCE_REVIEW, null
+        );
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.FINANCE_REVIEW, result.getApprovalStatus());
+        assertEquals(ApprovalStatus.FINANCE_REVIEW, existingApproval.getStatus());
+        assertEquals(manager, existingApproval.getApprover());
+        assertEquals("Old comment", existingApproval.getComments());
+        verify(expenseApprovalRepository).save(existingApproval);
+    }
+
+    @Test
+    @DisplayName("Test 10: Updates existing pending approval record with new comment")
+    void testProcessApproval_UpdatesExistingApproval_WithNewComment() {
+        // Arrange
+        ExpenseApproval existingApproval = new ExpenseApproval();
+        existingApproval.setId(10L);
+        existingApproval.setStatus(ApprovalStatus.MANAGER_REVIEW);
+        existingApproval.setApprovalLevel("MANAGER");
+
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("manager.john")).thenReturn(Optional.of(manager));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+        when(expenseApprovalRepository.findByExpenseIdOrderByCreatedAtAsc(1L))
+            .thenReturn(Collections.singletonList(existingApproval));
+
+        // Act
+        Expense result = approvalService.processApproval(
+            1L, "manager.john", ApprovalStatus.FINANCE_REVIEW, "Forwarded to finance"
+        );
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.FINANCE_REVIEW, result.getApprovalStatus());
+        assertEquals("Forwarded to finance", existingApproval.getComments());
+        verify(expenseApprovalRepository).save(existingApproval);
+    }
+
+    @Test
+    @DisplayName("Test 11: Throws exception for invalid transition from MANAGER_REVIEW")
+    void testValidateTransition_ManagerReview_InvalidTransition_ThrowsException() {
+        // Arrange
+        testExpense.setApprovalStatus(ApprovalStatus.MANAGER_REVIEW);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("manager.john")).thenReturn(Optional.of(manager));
+
+        // Act & Assert
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            approvalService.processApproval(
+                1L, "manager.john", ApprovalStatus.PENDING, "Invalid"
+            );
+        });
+        assertTrue(exception.getMessage().contains("Invalid transition from MANAGER_REVIEW"));
+    }
+
+    @Test
+    @DisplayName("Test 12: Throws exception for invalid transition from FINANCE_REVIEW")
+    void testValidateTransition_FinanceReview_InvalidTransition_ThrowsException() {
+        // Arrange
+        testExpense.setApprovalStatus(ApprovalStatus.FINANCE_REVIEW);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("finance.jane")).thenReturn(Optional.of(finance));
+
+        // Act & Assert
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            approvalService.processApproval(
+                1L, "finance.jane", ApprovalStatus.PENDING, "Invalid"
+            );
+        });
+        assertTrue(exception.getMessage().contains("Invalid transition from FINANCE_REVIEW"));
+    }
+
+    @Test
+    @DisplayName("Test 13: Finance review rejects expense successfully")
+    void testProcessApproval_FinanceRejects_Success() {
+        // Arrange
+        testExpense.setApprovalStatus(ApprovalStatus.FINANCE_REVIEW);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("finance.jane")).thenReturn(Optional.of(finance));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+        when(expenseApprovalRepository.findByExpenseIdOrderByCreatedAtAsc(1L))
+            .thenReturn(Collections.emptyList());
+
+        // Act
+        Expense result = approvalService.processApproval(
+            1L, "finance.jane", ApprovalStatus.REJECTED, "Budget exceeded"
+        );
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(ApprovalStatus.REJECTED, result.getApprovalStatus());
+        assertNotNull(result.getRejectedAt());
+    }
+
+    @Test
+    @DisplayName("Test 14: Throws exception when attempting transition from REJECTED or AUTO_APPROVED")
+    void testValidateTransition_RejectedOrAutoApproved_ThrowsException() {
+        // Test REJECTED
+        testExpense.setApprovalStatus(ApprovalStatus.REJECTED);
+        when(expenseRepository.findById(1L)).thenReturn(Optional.of(testExpense));
+        when(userRepository.findByUsername("manager.john")).thenReturn(Optional.of(manager));
+
+        IllegalStateException ex1 = assertThrows(IllegalStateException.class, () -> {
+            approvalService.processApproval(
+                1L, "manager.john", ApprovalStatus.APPROVED, "Retry"
+            );
+        });
+        assertTrue(ex1.getMessage().contains("Cannot change status of expense in REJECTED state"));
+
+        // Test AUTO_APPROVED
+        testExpense.setApprovalStatus(ApprovalStatus.AUTO_APPROVED);
+        IllegalStateException ex2 = assertThrows(IllegalStateException.class, () -> {
+            approvalService.processApproval(
+                1L, "manager.john", ApprovalStatus.APPROVED, "Retry"
+            );
+        });
+        assertTrue(ex2.getMessage().contains("Cannot change status of expense in AUTO_APPROVED state"));
     }
 }
