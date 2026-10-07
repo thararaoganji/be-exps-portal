@@ -60,6 +60,19 @@ public class ExpenseService {
     public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
                                  String username, ExpenseCategory category, LocalDate expenseDate,
                                  boolean draft) throws IOException {
+        return doCreateExpense(description, amount, receipt, username, category, expenseDate, draft);
+    }
+
+    // Overload for backward compatibility
+    @Transactional
+    public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
+                                 String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
+        return doCreateExpense(description, amount, receipt, username, category, expenseDate, false);
+    }
+
+    private Expense doCreateExpense(String description, BigDecimal amount, MultipartFile receipt,
+                                   String username, ExpenseCategory category, LocalDate expenseDate,
+                                   boolean draft) throws IOException {
         AppUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_PREFIX + username));
 
@@ -130,13 +143,6 @@ public class ExpenseService {
         return expense;
     }
 
-    // Overload for backward compatibility
-    @Transactional
-    public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
-                                 String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
-        return this.createExpense(description, amount, receipt, username, category, expenseDate, false);
-    }
-
     public List<Expense> getExpensesForUser(Long userId) {
         return expenseRepository.findByUserId(userId);
     }
@@ -162,7 +168,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to submit this expense");
+            throw new SecurityException("User is not authorized to submit this expense");
         }
 
         // Validate that expense is in DRAFT status (or PENDING for backward compatibility)
@@ -208,7 +214,7 @@ public class ExpenseService {
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to update this expense");
+            throw new SecurityException("User is not authorized to update this expense");
         }
 
         // Only allow updates on DRAFT expenses
