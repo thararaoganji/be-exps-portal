@@ -2,8 +2,13 @@ package portal.expenses.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "audit_entries")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -39,87 +44,12 @@ public class AuditEntry {
     @Column(name = "details", columnDefinition = "TEXT")
     private String details;
 
+    @Setter(AccessLevel.NONE)
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Expense getExpense() {
-        return expense;
-    }
-
-    public void setExpense(Expense expense) {
-        this.expense = expense;
-    }
-
-    public AppUser getUser() {
-        return user;
-    }
-
-    public void setUser(AppUser user) {
-        this.user = user;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public String getDetails() {
-        return details;
-    }
-
-    public void setDetails(String details) {
-        this.details = details;
-    }
-
-    public String getOldStatus() {
-        return oldStatus;
-    }
-
-    public void setOldStatus(String oldStatus) {
-        this.oldStatus = oldStatus;
-    }
-
-    public String getNewStatus() {
-        return newStatus;
-    }
-
-    public void setNewStatus(String newStatus) {
-        this.newStatus = newStatus;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public String getPerformedBy() {
-        return performedBy;
-    }
-
-    public void setPerformedBy(String performedBy) {
-        this.performedBy = performedBy;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 }
