@@ -66,11 +66,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
-        logger.warn("Validation failed: {} error(s) at {}", errors.size(), getRequestPath(request));
+        String requestPath = getRequestPath(request);
+        logger.warn("Validation failed: {} error(s) at {}", errors.size(), requestPath);
         logger.debug("Validation errors: {}", errors);
 
         ValidationErrorResponse errorResponse = new ValidationErrorResponse(
@@ -78,7 +77,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
                 "Validation failed for one or more fields",
-                getRequestPath(request),
+                requestPath,
                 errors
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
