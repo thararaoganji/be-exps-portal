@@ -13,10 +13,12 @@ import portal.expenses.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -44,6 +47,7 @@ public class ExpenseService {
     private final LocalStorageService localStorageService;
     private final PolicyEngineService policyEngineService;
     private final AuditEntryRepository auditEntryRepository;
+    private ExpenseService self;
 
     public ExpenseService(ExpenseRepository expenseRepository, UserRepository userRepository,
                          S3Service s3Service, LocalStorageService localStorageService,
@@ -54,6 +58,12 @@ public class ExpenseService {
         this.localStorageService = localStorageService;
         this.policyEngineService = policyEngineService;
         this.auditEntryRepository = auditEntryRepository;
+    }
+
+    @Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setSelf(ExpenseService self) {
+        this.self = self;
     }
 
     @Transactional
@@ -134,7 +144,8 @@ public class ExpenseService {
     @Transactional
     public Expense createExpense(String description, BigDecimal amount, MultipartFile receipt,
                                  String username, ExpenseCategory category, LocalDate expenseDate) throws IOException {
-        return this.createExpense(description, amount, receipt, username, category, expenseDate, false);
+        ExpenseService target = (self != null) ? self : this;
+        return target.createExpense(description, amount, receipt, username, category, expenseDate, false);
     }
 
     public List<Expense> getExpensesForUser(Long userId) {
@@ -143,12 +154,12 @@ public class ExpenseService {
 
     public Expense getExpenseById(Long expenseId) {
         return expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
+                .orElseThrow(() -> new NoSuchElementException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
     }
 
     public List<Expense> getExpensesForCurrentUser(String username) {
         AppUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_PREFIX + username));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_PREFIX + username));
         return expenseRepository.findByUserId(user.getId());
     }
 
@@ -158,11 +169,11 @@ public class ExpenseService {
     @Transactional
     public Expense submitExpense(Long expenseId, String username) {
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
+                .orElseThrow(() -> new NoSuchElementException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to submit this expense");
+            throw new AccessDeniedException("User is not authorized to submit this expense");
         }
 
         // Validate that expense is in DRAFT status (or PENDING for backward compatibility)
@@ -184,7 +195,7 @@ public class ExpenseService {
 
         // Create audit entry for submission
         AppUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_PREFIX + username));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_PREFIX + username));
         createAuditEntryWithStatus(expense, user, "SUBMITTED",
             oldStatus != null ? oldStatus.toString() : null,
             expense.getApprovalStatus().toString(),
@@ -204,11 +215,11 @@ public class ExpenseService {
                                  MultipartFile receipt, String username, ExpenseCategory category,
                                  LocalDate expenseDate) throws IOException {
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
+                .orElseThrow(() -> new NoSuchElementException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
 
         // Verify ownership
         if (!expense.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("User is not authorized to update this expense");
+            throw new AccessDeniedException("User is not authorized to update this expense");
         }
 
         // Only allow updates on DRAFT expenses
@@ -250,7 +261,7 @@ public class ExpenseService {
 
         // Create audit entry for update
         AppUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_PREFIX + username));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND_PREFIX + username));
         createAuditEntry(expense, user, "UPDATED",
             String.format("Expense updated: amount=%s, category=%s", amount, category));
 
@@ -296,7 +307,7 @@ public class ExpenseService {
     @Transactional
     public Expense markAsReimbursed(Long expenseId) {
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
+                .orElseThrow(() -> new NoSuchElementException(EXPENSE_NOT_FOUND_PREFIX + expenseId));
 
         if (expense.getApprovalStatus() != ApprovalStatus.APPROVED) {
             throw new IllegalStateException(
