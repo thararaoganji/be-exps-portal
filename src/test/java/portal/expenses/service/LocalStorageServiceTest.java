@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -117,7 +117,8 @@ class LocalStorageServiceTest {
     void deleteFile_fileDoesNotExist_noop() {
         String objectKey = "already-absent.txt";
         // Should not throw an exception when the file does not exist
-        localStorageService.deleteFile(objectKey);
+        assertDoesNotThrow(() -> localStorageService.deleteFile(objectKey));
+        assertFalse(Files.exists(uploadDirPath.resolve(objectKey)));
     }
 
     @Test
