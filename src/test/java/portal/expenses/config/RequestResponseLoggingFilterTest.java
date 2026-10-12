@@ -2,18 +2,16 @@ package portal.expenses.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,16 +83,14 @@ class RequestResponseLoggingFilterTest {
     }
 
     @Test
-    void testDoFilterInternal_emptyBodyAndNoContentType() throws ServletException, IOException {
+    void testDoFilterInternal_emptyBodyAndNoContentType() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/expenses/1");
         // No query string, no content type
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = new MockFilterChain();
 
-        filter.doFilterInternal(request, response, filterChain);
-
-        // Filter chain executed without error
+        assertDoesNotThrow(() -> filter.doFilterInternal(request, response, filterChain));
     }
 
     @Test
