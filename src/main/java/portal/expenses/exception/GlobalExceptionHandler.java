@@ -70,8 +70,12 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         });
 
-        logger.warn("Validation failed: {} error(s) at {}", errors.size(), getRequestPath(request));
-        logger.debug("Validation errors: {}", errors);
+        if (logger.isWarnEnabled()) {
+            logger.warn("Validation failed: {} error(s) at {}", errors.size(), getRequestPath(request));
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Validation errors: {}", errors);
+        }
 
         ValidationErrorResponse errorResponse = new ValidationErrorResponse(
                 LocalDateTime.now(),
