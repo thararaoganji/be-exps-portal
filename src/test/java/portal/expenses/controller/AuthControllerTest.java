@@ -109,15 +109,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.valid").value(false));
     }
 
-    /*
-
-    public static void main(String args[]){
-        System.out.println("display in test");
-    }
-
-     */
-
-
     @Test
     void validate_shouldReturnOkAndValid_whenTokenIsValid() throws Exception {
         // Arrange
@@ -134,14 +125,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.username").value("user"));
     }
-
-    /*
-
-    public static void main(String args[]){
-        System.out.println("welcome");
-    }
-
-     */
 
     @Test
     void validate_shouldReturnOkAndInvalid_whenTokenIsInvalid() throws Exception {
@@ -191,8 +174,9 @@ class AuthControllerTest {
         when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("mock-jwt-token");
         when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
 
+        LoginRequest loginRequest = new LoginRequest("user", "password");
         assertThrows(RuntimeException.class, () ->
-                controller.login(new LoginRequest("user", "password"))
+                controller.login(loginRequest)
         );
     }
 }
