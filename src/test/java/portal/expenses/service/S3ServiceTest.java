@@ -55,7 +55,7 @@ class S3ServiceTest {
         PutObjectRequest capturedRequest = requestCaptor.getValue();
         assertThat(capturedRequest.bucket()).isEqualTo(bucketName);
         assertThat(capturedRequest.key()).isEqualTo(key);
-        assertThat(bodyCaptor.getValue().contentLength()).isEqualTo(content.length);
+        assertThat(bodyCaptor.getValue().optionalContentLength()).contains((long) content.length);
     }
 
     @Test
