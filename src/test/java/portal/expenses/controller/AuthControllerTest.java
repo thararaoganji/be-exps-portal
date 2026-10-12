@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,8 +25,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -139,7 +143,56 @@ class AuthControllerTest {
 
      */
 
+    @Test
+    void validate_shouldReturnOkAndInvalid_whenTokenIsInvalid() throws Exception {
+        // In WebMvcTest, JwtAuthFilter also inspects the Authorization header.
+        // Mock validateToken for the filter as well so request proceeds to controller
+        String token = "invalid-jwt-token";
+        UserDetails userDetails = new User("user", "password", new ArrayList<>());
 
+        when(jwtUtil.extractUsername(token)).thenReturn("user");
+        when(userDetailsService.loadUserByUsername("user")).thenReturn(userDetails);
+        when(jwtUtil.validateToken(token, userDetails)).thenReturn(false);
 
+        mockMvc.perform(get("/auth/validate")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.username").value("user"));
+    }
 
+    @Test
+    void validateToken_shouldReturnBadRequest_whenHeaderIsNull() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        ResponseEntity<Map<String, Object>> response = controller.validateToken(null);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Missing or invalid Authorization header", response.getBody().get("error"));
+    }
+
+    @Test
+    void validateToken_shouldReturnBadRequest_whenExceptionThrown() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        when(jwtUtil.extractUsername("malformed-token")).thenThrow(new RuntimeException("Malformed token"));
+
+        ResponseEntity<Map<String, Object>> response = controller.validateToken("Bearer malformed-token");
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals(false, response.getBody().get("valid"));
+        assertEquals("Malformed token", response.getBody().get("error"));
+    }
+
+    @Test
+    void login_shouldThrowException_whenUserNotFoundInRepository() {
+        AuthController controller = new AuthController(authenticationManager, jwtUtil, userDetailsService, userRepository);
+        UserDetails userDetails = new User("user", "password", new ArrayList<>());
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("mock-jwt-token");
+        when(userRepository.findByUsername("user")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () ->
+                controller.login(new LoginRequest("user", "password"))
+        );
+    }
 }
